@@ -42,6 +42,7 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import com.github.zafarkhaja.semver.Version;
 import com.infiniteautomation.mango.io.serial.SerialPortManager;
 import com.infiniteautomation.mango.monitor.MonitoredValues;
 import com.serotonin.ShouldNeverHappenException;
@@ -56,7 +57,6 @@ import com.serotonin.m2m2.rt.EventManager;
 import com.serotonin.m2m2.rt.ILoginManager;
 import com.serotonin.m2m2.rt.RuntimeManager;
 import com.serotonin.m2m2.rt.maint.BackgroundProcessing;
-import com.serotonin.m2m2.shared.VersionData;
 import com.serotonin.m2m2.util.BackgroundContext;
 import com.serotonin.m2m2.util.DocumentationManifest;
 import com.serotonin.m2m2.util.ExportCodes;
@@ -130,36 +130,53 @@ public class Common {
         return null;
     }
 
+    public static final Pattern DEPENDENCY_PATTERN = Pattern.compile("^(.*?)(?:=(.*))$");
+
+    public static final Pattern PARTIAL_VERSION_PATTERN = Pattern.compile("^(\\d+)(?:\\.(\\d+))?$");
+    
+    public static final Version parseVersion(String versionString) {
+        Matcher m = PARTIAL_VERSION_PATTERN.matcher(versionString);
+        if (m.matches()) {
+            if (m.group(2) == null) {
+                return Version.forIntegers(Integer.parseInt(m.group(1)));
+            } else {
+                return Version.forIntegers(Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2)));
+            }
+        } else {
+            return Version.valueOf(versionString);
+        }
+    }
+    
+    public static final String formatVersionForStore(Version v) {
+        return String.format("%d.%d.%d", v.getMajorVersion(), v.getMinorVersion(), v.getPatchVersion());
+    }
+
     /*
      * Updating the MA version: - Create a DBUpdate subclass for the old version number. This may not do anything in
      * particular to the schema, but is still required to update the system settings so that the database has the
      * correct version.
      */
-    public static final VersionData getVersion() {
-        return new VersionData(getMajorVersion(), getMinorVersion(), getMicroVersion());
-    }
-
-    public static final int getMajorVersion() {
-        return 2;
-    }
-
-    public static final int getMinorVersion() {
-        return 8;
-    }
-
-    public static final int getMicroVersion() {
-        return 0;
+    public static final Version getVersion() {
+        // TODO retrieve from Maven pom.xml
+        return Version.forIntegers(2, 8, 0).setPreReleaseVersion("beta1").setBuildMetadata("build12333");
     }
 
     public static final int getDatabaseSchemaVersion() {
         return 13;
     }
 
+    public static final boolean isCompatibleWithCore(Version requiredVersion) {
+        return getVersion().getMajorVersion() == requiredVersion.getMajorVersion() && getVersion().getMinorVersion() == requiredVersion.getMinorVersion();
+        // following doen't allow core version with qualifier to fulfill a module's x.x core dependency
+        //return getVersion().greaterThanOrEqualTo(requiredVersion) && getVersion().lessThan(requiredVersion.incrementMinorVersion());
+    }
+
     /**
      * @return The version of Java that the core is compiled for
      */
-    public static final double getJavaSpecificationVersion(){
-    	return 1.7;
+    public static final Version getJavaSpecificationVersion() {
+        // TODO retrieve from Maven pom.xml
+        return Version.forIntegers(1, 7, 0);
     }
     
     public static String getWebPath(String path) {

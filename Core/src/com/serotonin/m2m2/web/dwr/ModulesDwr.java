@@ -137,7 +137,7 @@ public class ModulesDwr extends BaseDwr {
             Map<String, String> jsonModules = new HashMap<>();
             json.put("modules", jsonModules);
 
-            jsonModules.put("core", Common.getVersion().getFullString());
+            jsonModules.put("core", Common.formatVersionForStore(Common.getVersion()));
             for (StringStringPair module : modules)
                 jsonModules.put(module.getKey(), module.getValue());
 
@@ -220,9 +220,9 @@ public class ModulesDwr extends BaseDwr {
         Map<String, String> jsonModules = new HashMap<>();
         json.put("modules", jsonModules);
 
-        jsonModules.put("core", Common.getVersion().getFullString());
+        jsonModules.put("core", Common.formatVersionForStore(Common.getVersion()));
         for (Module module : modules)
-            jsonModules.put(module.getName(), module.getVersion());
+            jsonModules.put(module.getName(), Common.formatVersionForStore(module.getVersion()));
 
         StringWriter stringWriter = new StringWriter();
         new JsonWriter(Common.JSON_CONTEXT, stringWriter).writeObject(json);

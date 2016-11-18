@@ -20,6 +20,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.web.servlet.View;
 
+import com.github.zafarkhaja.semver.Version;
 import com.serotonin.ShouldNeverHappenException;
 import com.serotonin.io.StreamUtils;
 import com.serotonin.json.JsonWriter;
@@ -51,14 +52,14 @@ public class ModulesController implements UrlHandler {
         List<Module> modules = ModuleRegistry.getModules();
         Module.sortByName(modules);
 
-        String version = Common.getVersion().getFullString();
+        Version version = Common.getVersion();
 
         //Get the build number if one exists
         InputStream inStream = this.getClass().getResourceAsStream("/mango.build.number");
         if (inStream != null) {
             Properties props = new Properties();
             props.load(inStream);
-            version += " build " + props.getProperty("build.number");
+            version = version.setBuildMetadata("build." + props.getProperty("build.number"));
             inStream.close();
         }
 
@@ -83,13 +84,7 @@ public class ModulesController implements UrlHandler {
         json.put("modules", jsonModules);
 
         for (Module module : modules) {
-            if (module.getName().equals("core")) {
-                //Don't add that core module as it might have the build number in the version
-                jsonModules.put("core", Common.getVersion().getFullString());
-            }
-            else {
-                jsonModules.put(module.getName(), module.getVersion());
-            }
+            jsonModules.put(module.getName(), Common.formatVersionForStore(module.getVersion()));
         }
 
         try {

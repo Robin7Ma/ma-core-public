@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.github.zafarkhaja.semver.Version;
 import com.serotonin.m2m2.Common;
 import com.serotonin.m2m2.Constants;
 import com.serotonin.m2m2.i18n.TranslatableMessage;
@@ -44,7 +45,7 @@ public class Module {
     }
 
     private final String name;
-    private final String version;
+    private final Version version;
     private String licenseType;
     private final TranslatableMessage description;
     private final String vendor;
@@ -69,7 +70,7 @@ public class Module {
      * @param vendor
      * @param vendorUrl
      */
-    public Module(String name, String version, TranslatableMessage description, String vendor, String vendorUrl,
+    public Module(String name, Version version, TranslatableMessage description, String vendor, String vendorUrl,
             String dependencies, int loadOrder) {
         this.name = name;
         this.version = version;
@@ -174,7 +175,7 @@ public class Module {
     /**
      * @return the module's version
      */
-    public String getVersion() {
+    public Version getVersion() {
         return version;
     }
 

@@ -8,6 +8,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import com.github.zafarkhaja.semver.Version;
+import com.serotonin.m2m2.Common;
 import com.serotonin.m2m2.shared.LicenseParseException;
 import com.serotonin.util.XmlUtilsTS;
 
@@ -19,7 +21,7 @@ import com.serotonin.util.XmlUtilsTS;
 public class InstanceLicense {
     private final String guid;
     private final String distributor;
-    private final int version;
+    private final Version version;
     private final String licenseType;
     private final List<LicenseFeature> features;
     private final List<ModuleLicense> modules;
@@ -36,7 +38,8 @@ public class InstanceLicense {
         guid = XmlUtilsTS.getChildElementText(coreElement, "guid");
 
         distributor = XmlUtilsTS.getChildElementText(coreElement, "distributor");
-        version = XmlUtilsTS.getChildElementTextAsInt(coreElement, "version", -1);
+        String versionString = XmlUtilsTS.getChildElementText(coreElement, "version");
+        version = versionString == null ? null : Common.parseVersion(versionString);
         licenseType = XmlUtilsTS.getChildElementText(coreElement, "licenseType");
 
         Element featuresElement = XmlUtilsTS.getChildElement(coreElement, "features");
@@ -72,14 +75,14 @@ public class InstanceLicense {
         return distributor;
     }
 
-    public int getVersion() {
+    public Version getVersion() {
         return version;
     }
 
-    public boolean versionMatches(int coreVersion) {
-        if (version == -1)
+    public boolean versionMatches(Version coreVersion) {
+        if (version == null)
             return true;
-        return version == coreVersion;
+        return coreVersion.lessThan(version.incrementMajorVersion());
     }
 
     public String getLicenseType() {
